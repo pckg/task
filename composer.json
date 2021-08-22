@@ -1,0 +1,48 @@
+{
+  "name": "pckg/task",
+  "description": "Simple task classes",
+  "homepage": "https://github.com/pckg/task",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Bojan Rajh",
+      "email": "schtr4jh@schtr4jh.net"
+    }
+  ],
+  "require": {
+    "pckg/concept": "dev-master",
+    "pckg/database": "dev-master",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "pckg-app/frontend-dev": "dev-master"
+  },
+  "autoload": {
+    "psr-0": {
+      "Pckg": "src\\"
+    }
+  },
+  "scripts": {
+    "test": [
+      "true || vendor/bin/phpunit --help --stop-on-defect",
+      "true || vendor/bin/phpcloc cloc src/",
+      "vendor/bin/phpstan analyse src/ --level=1",
+      "vendor/bin/phpcs --extensions=php --warning-severity=8 --error-severity=1 --standard=PSR12 --parallel=2 -p src/",
+      "vendor/bin/codecept run"
+    ],
+    "applycsandpatch": [
+      "composer autofix && composer autopatch"
+    ],
+    "autofix": [
+      "vendor/bin/phpcs --extensions=php --report-diff=phpcs.diff --warning-severity=8 --error-severity=1 --standard=PSR12 --parallel=2 -p src/"
+    ],
+    "autopatch": [
+      "patch -p0 -ui phpcs.diff ; rm phpcs.diff"
+    ]
+  },
+  "scripts-descriptions": {
+    "test": "Run all tests and quality checks"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
