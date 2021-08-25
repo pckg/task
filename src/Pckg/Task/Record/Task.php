@@ -1,8 +1,8 @@
 <?php namespace Pckg\Task\Record;
 
-use Pckg\Task\Entity\Tasks;
 use Pckg\Database\Entity;
 use Pckg\Database\Record;
+use Pckg\Task\Entity\Tasks;
 use Throwable;
 
 class Task extends Record
@@ -37,7 +37,7 @@ class Task extends Record
          */
         $task = parent::create(array_merge($data, [
             'parent_id' => $parentTask->id ?? null,
-            'status'    => 'created',
+            'status' => 'created',
         ]), $entity);
 
         /**
@@ -90,9 +90,14 @@ class Task extends Record
             if (!$make) {
                 throw new \Exception('Task body should be defined');
             }
-            $this->setAndSave(['status' => 'started', 'started_at' => date('Y-m-d H:i:s')]);
+            $this->setAndSave([
+                'status' => $this->timeouts_at ? 'async' : 'started',
+                'started_at' => date('Y-m-d H:i:s'),
+            ]);
             $result = $make();
-            $this->set(['status' => 'ended']);
+            if (!$this->timeouts_at) {
+                $this->set(['status' => $this->timeouts_at ? 'async' : 'ended']);
+            }
             $this->end();
 
             return $result;
@@ -114,5 +119,27 @@ class Task extends Record
     {
         $this->setAndSave(['ended_at' => date('Y-m-d H:i:s')]);
         context()->bind(Task::class, $this->parent);
+    }
+
+    public function async(string $timeout)
+    {
+        return $this->setAndSave([
+            'timeouts_at' => date('Y-m-d H:i:s', strtotime('+' . $timeout)),
+        ]);
+    }
+
+    public function acquireLock()
+    {
+        $active = (new Tasks())->where('status', ['started', 'created', 'async'])
+            ->where('started_at', date('Y-m-d H:i:s', '-1hour'), '>=')
+            ->where('id', $this->id, '!=')
+            ->one();
+
+        if (!$active) {
+            return true;
+        }
+
+        $this->setAndSave(['status' => 'double']);
+        return false;
     }
 }
