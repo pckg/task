@@ -131,12 +131,12 @@ class Task extends Record
     public function acquireLock()
     {
         $active = (new Tasks())->where('status', ['started', 'created', 'async'])
-            ->where('started_at', date('Y-m-d H:i:s', '-1hour'), '>=')
+            ->whereRaw('timeouts_at', date('Y-m-d H:i:s'), '>=')
             ->where('id', $this->id, '!=')
             ->one();
 
         if (!$active) {
-            return true;
+            return $this;
         }
 
         $this->setAndSave(['status' => 'double']);
