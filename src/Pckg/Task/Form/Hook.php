@@ -5,7 +5,7 @@ namespace Pckg\Task\Form;
 use Pckg\Htmlbuilder\Element\Form;
 use Pckg\Task\Event\HookEvent;
 
-class Hook extends Form
+class Hook extends Form implements Form\ResolvesOnRequest
 {
 
     public function initFields()
