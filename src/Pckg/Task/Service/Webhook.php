@@ -48,7 +48,7 @@ class Webhook
                     'created_at' => date('Y-m-d H:i:s'),
                     'data' => json_encode($data),
                     'ip' => 'localhost',
-                    'url' => $url,
+                    'url' => $origin['url'],
                 ]);
 
                 $response = null;
@@ -60,7 +60,7 @@ class Webhook
                     ]);
                 } catch (\Throwable $e) {
                     trigger(Webhook::class . '.notificationException', [
-                        'url' => $url,
+                        'url' => $origin['url'],
                         'payload' => $data,
                     ]);
                 } finally {
@@ -69,7 +69,7 @@ class Webhook
                         'created_at' => date('Y-m-d H:i:s'),
                         'data' => $response ? $response->getBody() : null,
                         'ip' => 'localhost',
-                        'url' => $url,
+                        'url' => $origin['url'],
                     ]);
                 }
             } catch (\Throwable $e) {
