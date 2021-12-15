@@ -1,8 +1,12 @@
 <?php namespace Pckg\Task\Record;
 
 use Pckg\Database\Entity;
+use Pckg\Database\Field\JsonArray;
+use Pckg\Database\Field\JsonObject;
 use Pckg\Database\Record;
 use Pckg\Task\Entity\Tasks;
+use Pckg\Task\Form\Hook;
+use Pckg\Task\Service\Webhook;
 use Throwable;
 
 class Task extends Record
@@ -15,7 +19,52 @@ class Task extends Record
      */
     protected $make;
 
-    public static function create($data = [], Entity $entity = null)
+    /**
+     * @var null|mixed
+     */
+    protected $result = null;
+
+    protected $encapsulate = [
+        'props' => JsonObject::class,
+        'context' => JsonArray::class,
+    ];
+
+    protected static function getRequestContext()
+    {
+        /**
+         * No context in non-http context.
+         */
+        if (!isHttp()) {
+            return [];
+        }
+
+        /**
+         * Check if the request is a valid HookEvent / Hook request.
+         */
+        $hookRequest = (new Hook())->initFields()->populateFromRequest();
+
+        /**
+         * A non-pckg-app origin.
+         */
+        if (!$hookRequest->isValid()) {
+            return post('@context', []);
+        }
+
+        /**
+         * Pass current context.
+         */
+        return $hookRequest->getData()['context'] ?? [];
+    }
+
+    public static function createFromRequest(string $title)
+    {
+        return static::create([
+            'title' => $title,
+            'context' => static::getRequestContext(),
+        ]);
+    }
+
+    public static function create($data = [], Entity $entity = null): Task
     {
         /**
          * Get current task.
@@ -23,13 +72,17 @@ class Task extends Record
         $parentTask = context()->getOrDefault(Task::class);
 
         /**
+         * This is where we should also get the context from the external task?
+         */
+
+        /**
          * If title was passed, transform it.
          */
         if (is_string($data)) {
-            if (isConsole()) {
-                d($data);
-            }
-            $data = ['title' => $data];
+            $data = [
+                'title' => $data,
+                'context' => [],
+            ];
         }
 
         /**
@@ -41,11 +94,46 @@ class Task extends Record
         ]), $entity);
 
         /**
+         * Update context in most parent task?
+         */
+        if (!$parentTask) {
+            $task->pushContext($task->taskContext);
+        }
+
+        /**
          * Bind it as current.
          */
         context()->bind(Task::class, $task);
 
         return $task;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTaskContextAttribute()
+    {
+        return [
+            'origin' => config('pckg.task.origin'),
+            'task' => $this->id,
+            // add signature?
+        ];
+    }
+
+    /**
+     * @param array $newContext
+     * @return $this
+     */
+    public function pushContext(array $newContext)
+    {
+        $origin = config('pckg.task.origin');
+        $context = $task->context;
+        $context[] = ['origin' => $origin] + $newContext;
+        $task->setAndSave([
+            'context' => $context,
+        ]);
+
+        return $this;
     }
 
     /**
@@ -94,13 +182,13 @@ class Task extends Record
                 'status' => $this->timeouts_at ? 'async' : 'started',
                 'started_at' => date('Y-m-d H:i:s'),
             ]);
-            $result = $make();
+            $this->result = $make();
             if (!$this->timeouts_at) {
                 $this->set(['status' => $this->timeouts_at ? 'async' : 'ended']);
+            } else {
+                $this->end();
             }
-            $this->end();
-
-            return $result;
+            return $this->result;
         } catch (Throwable $e) {
             /**
              * If any exception is thrown, mark task as failed.
@@ -115,16 +203,35 @@ class Task extends Record
         }
     }
 
-    public function end()
+    public function end(string $event = null, array $payload = [])
     {
-        $this->setAndSave(['ended_at' => date('Y-m-d H:i:s')]);
+        $toUpdate = [
+            'ended_at' => date('Y-m-d H:i:s'),
+        ];
+        if ($event) {
+            $toUpdate['status'] = 'ended';
+        }
+        $this->setAndSave($toUpdate);
         context()->bind(Task::class, $this->parent);
+
+        if (!$event) {
+            return;
+        }
+        
+        Webhook::notification($this, $event, $payload);
     }
 
     public function async(string $timeout)
     {
         return $this->setAndSave([
             'timeouts_at' => date('Y-m-d H:i:s', strtotime('+' . $timeout)),
+        ]);
+    }
+
+    public function props(array $props)
+    {
+        return $this->setAndSave([
+            'props' => $props,
         ]);
     }
 
@@ -141,5 +248,28 @@ class Task extends Record
 
         $this->setAndSave(['status' => 'double']);
         return false;
+    }
+
+    public function wrapSubtask(callable $task)
+    {
+        context()->bind(Task::class, $this);
+        $response = $task();
+        context()->bind(Task::class, $this->parent);
+
+        return $response;
+    }
+
+    public function getLastParentAttribute()
+    {
+        if (!$this->parent_id) {
+            return $this;
+        }
+
+        return $this->parent->lastParent;
+    }
+
+    public function getResult()
+    {
+        return $this->result;
     }
 }
