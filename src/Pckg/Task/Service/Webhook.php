@@ -16,7 +16,9 @@ class Webhook
         $payload = [
             'origin' => config('pckg.hook.origin'),
             'event' => $event,
+            // object?
             'body' => $body,
+            // array?
             'context' => $lastParent->context,
             'retry' => 0,
             'task' => $lastParent->id,
