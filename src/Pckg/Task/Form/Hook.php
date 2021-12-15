@@ -12,8 +12,8 @@ class Hook extends Form implements Form\ResolvesOnRequest
     {
         $this->addText('origin')->required();
         $this->addText('event')->required();
-        $this->addTextarea('body')->required(); // json/object
-        $this->addTextarea('context'); // json/array
+        $this->addText('body')->required(); // json/object
+        $this->addText('context'); // json/array
         $this->addInteger('retry');
 
         //$this->addTextarea('task'); // json
