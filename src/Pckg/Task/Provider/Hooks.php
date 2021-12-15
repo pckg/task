@@ -2,7 +2,7 @@
 
 namespace Pckg\Task\Provider;
 
-use Pckg\Task\Contoller\Hooks as HooksController;
+use Pckg\Task\Controller\Hooks as HooksController;
 use Pckg\Task\Form\Hook;
 use Pckg\Task\Handler\ProcessHook;
 use Pckg\Task\Middleware\DisallowInvalidHosts;

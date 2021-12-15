@@ -1,6 +1,6 @@
 <?php
 
-namespace Pckg\Task\Contoller;
+namespace Pckg\Task\Controller;
 
 use Pckg\Task\Form\Hook;
 
