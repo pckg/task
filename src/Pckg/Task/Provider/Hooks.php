@@ -16,7 +16,7 @@ class Hooks extends Provider
         return [
             routeGroup([
                 'controller' => HooksController::class,
-                'routePrefix' => '/api/hooks',
+                'urlPrefix' => '/api/hooks',
                 'namePrefix' => 'api.hooks'
             ], [
                 '' => route()->middlewares([
