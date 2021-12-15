@@ -127,9 +127,9 @@ class Task extends Record
     public function pushContext(array $newContext)
     {
         $origin = config('pckg.task.origin');
-        $context = $task->context;
+        $context = $this->context;
         $context[] = ['origin' => $origin] + $newContext;
-        $task->setAndSave([
+        $this->setAndSave([
             'context' => $context,
         ]);
 
@@ -217,7 +217,7 @@ class Task extends Record
         if (!$event) {
             return;
         }
-        
+
         Webhook::notification($this, $event, $payload);
     }
 
