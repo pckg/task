@@ -12,9 +12,9 @@ class Hooks
      */
     public function postIndexAction(Hook $hook)
     {
-        // return some response?
         $hook->toHookEvent()->handle();
 
+        // return some response?
         return [
             'success' => true,
         ];

@@ -2,7 +2,9 @@
 
 namespace Pckg\Task\Event;
 
+use Pckg\Concept\Context;
 use Pckg\Task\Form\Hook;
+use Pckg\Task\Record\Task;
 
 class HookEvent
 {
@@ -37,10 +39,18 @@ class HookEvent
             return;
         }
 
-        /**
-         * We probably want to queue all events?
-         */
-        (new $event($this))->handle();
+        // queue('hook-events', ['event' => $this->toArray()]);
+        // this should be queued?
+        $handler = (new $event($this));
+
+        // allow wrapping
+        trigger(HookEvent::class . '.handling', [$handler, $this]);
+
+        // handle the event
+        $handler->handle();
+
+        // allow after-events
+        trigger(HookEvent::class . '.handled', [$handler, $this]);
     }
 
     public function getOrigin(): string
