@@ -64,6 +64,22 @@ class Task extends Record
         ]);
     }
 
+    public static function named(string $name): Task
+    {
+        return static::create([
+            'title' => $name,
+            'context' => [],
+        ]);
+    }
+
+    /**
+     * @param $data
+     * @param Entity|null $entity
+     * @return Task
+     * @throws \Exception
+     * @deprecated
+     * @see named
+     */
     public static function create($data = [], Entity $entity = null): Task
     {
         /**
@@ -182,7 +198,7 @@ class Task extends Record
                 'status' => $this->timeouts_at ? 'async' : 'started',
                 'started_at' => date('Y-m-d H:i:s'),
             ]);
-            $this->result = $make();
+            $this->result = $make($this);
             if (!$this->timeouts_at) {
                 $this->set(['status' => $this->timeouts_at ? 'async' : 'ended']);
             } else {
@@ -238,7 +254,7 @@ class Task extends Record
     public function acquireLock()
     {
         $active = (new Tasks())->where('status', ['started', 'created', 'async'])
-            ->whereRaw('timeouts_at', date('Y-m-d H:i:s'), '>=')
+            ->where('timeouts_at', date('Y-m-d H:i:s'), '>=')
             ->where('id', $this->id, '!=')
             ->one();
 

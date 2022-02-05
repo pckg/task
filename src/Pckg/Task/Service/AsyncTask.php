@@ -6,15 +6,15 @@ use Pckg\Task\Record\Task;
 
 trait AsyncTask
 {
-    protected function asyncTask(string $name, string $duration, callable $callable)
+    public function asyncTask(string $name, string $duration, callable $callable, bool $lock = false)
     {
         /**
          * Do we want to acquire lock?
          */
         $task = Task::create($name);
 
-        if (!$task->acquireLock()) {
-            response()->bad('Task locked, retry in an hour');
+        if ($lock && !$task->acquireLock()) {
+            response()->bad('Task locked, retry in next ' . $duration);
         }
 
         try {
