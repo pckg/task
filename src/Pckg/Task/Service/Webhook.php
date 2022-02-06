@@ -54,7 +54,7 @@ class Webhook
                 $response = null;
                 try {
                     // can we log this in api_logs?
-                    $response = (new Client([]))->post($urls, [
+                    $response = (new Client([]))->post($origin['url'], [
                         RequestOptions::JSON => $data,
                         RequestOptions::TIMEOUT => 5,
                     ]);
