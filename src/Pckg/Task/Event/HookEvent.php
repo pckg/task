@@ -80,20 +80,23 @@ class HookEvent
         }
 
         foreach ($forwards as $forward) {
-            $genericEvent = new GenericHookEvent($this);
+            Task::named('Forwarding ' . $this->event)
+                ->make(function ($task) use ($forward) {
+                    $genericEvent = new GenericHookEvent($this);
 
-            // allow wrapping
-            trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
+                    // allow wrapping
+                    trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
 
-            // is task in context?
-            Webhook::notification(
-                $this->getTask(),
-                $forward['to'],
-                $forward['body']
-            );
+                    // is task in context?
+                    Webhook::notification(
+                        $task,
+                        $forward['to'],
+                        $forward['body']
+                    );
 
-            // allow after-events
-            trigger(HookEvent::class . '.forwarded', [$genericEvent, $this]);
+                    // allow after-events
+                    trigger(HookEvent::class . '.forwarded', [$genericEvent, $this]);
+                });
         }
     }
 
