@@ -76,7 +76,7 @@ class Webhook
                     ApiLog::create([
                         'type' => 'external:response:' . ($response ? $response->getStatusCode() : 'exception'),
                         'created_at' => date('Y-m-d H:i:s'),
-                        'data' => $response ? $response->getBody() : null,
+                        'data' => $response ? $response->getBody()->getContents() : null,
                         'ip' => 'localhost',
                         'url' => $origin['url'],
                     ]);
