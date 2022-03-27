@@ -8,9 +8,13 @@ use Pckg\Task\Record\Task;
 
 class UnwrapHookEvent
 {
-    public function __construct(protected AbstractHookEvent $event, protected Context $context)
-    {
+    protected AbstractHookEvent $event;
+    protected Context $context;
 
+    public function __construct(AbstractHookEvent $event, Context $context)
+    {
+        $this->event = $this->event;
+        $this->context = $this->context;
     }
 
     public function handle()

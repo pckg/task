@@ -8,9 +8,11 @@ use Pckg\Task\Service\Webhook;
 
 class ProcessMultiStepEvent
 {
-    public function __construct(protected AbstractHookEvent $event)
-    {
+    protected AbstractHookEvent $event;
 
+    public function __construct(AbstractHookEvent $event)
+    {
+        $this->event = $event;
     }
 
     public function handle()
