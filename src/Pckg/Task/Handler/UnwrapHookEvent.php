@@ -10,7 +10,6 @@ class UnwrapHookEvent
 {
     public function __construct(protected AbstractHookEvent $event, protected Context $context)
     {
-
     }
 
     public function handle()
