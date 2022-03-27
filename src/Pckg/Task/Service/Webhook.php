@@ -34,6 +34,12 @@ class Webhook
     public static function notification(Task $task, string $event, array|callable $payload, array $onlyOrigins = [])
     {
         $data = static::buildPayload($task, $event, $payload);
+
+        return static::processNotification($data, $event, $onlyOrigins);
+    }
+
+    public static function processNotification(array $data, string $event, array $onlyOrigins = []) {
+
         $origins = config('pckg.hook.origins', []);
         foreach ($origins as $key => $origin) {
             $partialEvent = explode('@', $event)[0];

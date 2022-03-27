@@ -77,23 +77,42 @@ class HookEvent
 
         foreach ($forwards as $forward) {
 
-            Task::named('Forwarding ' . $this->event)
-                ->make(function ($task) use ($forward) {
-                    $genericEvent = new GenericHookEvent($this);
+            $genericEvent = new GenericHookEvent($this);
+            $task = $genericEvent->getMyContext('task');
 
-                    // allow wrapping
-                    trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
+            // allow wrapping
+            trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
 
-                    // is task in context?
+            try {
+                // is task in context?
+
+                if (!$task) {
+                    // we need to provide task so the context is known?
+                    error_log("No task to forward? " . json_encode($this->toArray()));
+
+                    Webhook::processNotification([
+                        'origin' => config('pckg.hook.origin'),
+                        'event' => explode('@', $forward['to'])[0],
+                        'body' => is_only_callable($forward['body']) ? $forward['body']() : $forward['body'],
+                        'context' => $this->context,
+                        'retry' => 0,
+                        'task' => null,
+                    ],
+                        $forward['to']
+                    );
+                } else {
                     Webhook::notification(
                         $task,
                         $forward['to'],
                         $forward['body']
                     );
+                }
+            } catch (\Throwable $e) {
+                error_log("Error forwarding task:" . exception($e));
+            }
 
-                    // allow after-events
-                    trigger(HookEvent::class . '.forwarded', [$genericEvent, $this]);
-                });
+            // allow after-events
+            trigger(HookEvent::class . '.forwarded', [$genericEvent, $this]);
         }
     }
 
