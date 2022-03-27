@@ -4,6 +4,7 @@ namespace Pckg\Task\Event;
 
 use Pckg\Concept\Context;
 use Pckg\Task\Form\Hook;
+use Pckg\Task\Handler\ProcessMultiStepEvent;
 use Pckg\Task\Record\Task;
 use Pckg\Task\Service\Webhook;
 
@@ -34,21 +35,25 @@ class HookEvent
             return;
         }
 
-        if (isset($origin['triggers'][$this->event])) {
-            $this->handleTriggers($origin['triggers'][$this->event]);
-        }
+        // allow wrapping
+        trigger(HookEvent::class . '.handling', [$handler, $this]);
 
-        if (isset($origin['forwarders'][$this->event])) {
-            $this->handleForwarders($origin['forwarders'][$this->event]);
-        }
+        $this->handleTriggers($origin['triggers'][$this->event] ?? []);
 
-        if (!($origin['triggers'] ?? []) && !($origin['forwarders'] ?? [])) {
-            error_log('Non-registered trigger/forwarder ' . $this->event . ' for origin ' . $this->origin);
-        }
+        (new ProcessMultiStepEvent(new GenericHookEvent($this)))->handle();
+
+        $this->handleForwarders($origin['forwarders'][$this->event] ?? []);
+
+        // allow after-events
+        trigger(HookEvent::class . '.handled', [$handler, $this]);
     }
 
     protected function handleTriggers(string|array $events)
     {
+        if (!$events) {
+            return;
+        }
+
         if (!is_array($events)) {
             $events = [$events];
         }
@@ -58,19 +63,17 @@ class HookEvent
             // this should be queued?
             $handler = (new $event($this));
 
-            // allow wrapping
-            trigger(HookEvent::class . '.handling', [$handler, $this]);
-
             // handle the event
             $handler->handle();
-
-            // allow after-events
-            trigger(HookEvent::class . '.handled', [$handler, $this]);
         }
     }
 
     protected function handleForwarders(array $forwards)
     {
+        if (!$forwards) {
+            return;
+        }
+
         if (!is_associative_array($forwards)) {
             $forwards = [$forwards];
         }
