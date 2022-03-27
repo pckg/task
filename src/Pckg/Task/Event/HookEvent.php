@@ -78,7 +78,7 @@ class HookEvent
         foreach ($forwards as $forward) {
 
             Task::named('Forwarding ' . $this->event)
-                ->make(function ($task) {
+                ->make(function ($task) use ($forward) {
                     $genericEvent = new GenericHookEvent($this);
 
                     // allow wrapping
