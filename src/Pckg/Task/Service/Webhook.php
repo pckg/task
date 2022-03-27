@@ -10,15 +10,15 @@ use Pckg\Task\Record\Task;
 
 class Webhook
 {
-    public static function buildPayload(Task $task, string $event, array $body): array
+    public static function buildPayload(Task $task, string $event, array|callable $body): array
     {
         $lastParent = $task->lastParent;
         $payload = [
             'origin' => config('pckg.hook.origin'),
-            'event' => $event,
+            'event' => explode('@', $event)[0],
             // object?
-            'body' => $body,
-            // array?
+            'body' => is_only_callable($body) ? $body($task, $event) : $body,
+            // array? sign the context?
             'context' => $lastParent->context,
             'retry' => 0,
             'task' => $lastParent->id,
@@ -31,15 +31,24 @@ class Webhook
         return $payload;
     }
 
-    public static function notification(Task $task, string $event, array $payload)
+    public static function notification(Task $task, string $event, array|callable $payload, array $onlyOrigins = [])
     {
         $data = static::buildPayload($task, $event, $payload);
         $origins = config('pckg.hook.origins', []);
-        foreach ($origins as $origin) {
-            // origin is listening for events
-            $events = $origin['listeners'] ?? [];
-            if (!$events || !in_array('*', $events) && !in_array($event, $events)) {
+        foreach ($origins as $key => $origin) {
+            $partialEvent = explode('@', $event)[0];
+            if ($partialEvent !== $event && $event !== ($partialEvent . '@' . $key)) {
                 continue;
+            }
+            if ($onlyOrigins && !in_array($key, $onlyOrigins)) {
+                continue;
+            }
+            if ($partialEvent === $event) {
+                // origin is listening for events
+                $events = $origin['listeners'] ?? [];
+                if (!$events || !in_array('*', $events) && !in_array($event, $events)) {
+                    continue;
+                }
             }
 
             try {

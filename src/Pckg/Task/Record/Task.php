@@ -130,7 +130,7 @@ class Task extends Record
     public function getTaskContextAttribute()
     {
         return [
-            'origin' => config('pckg.task.origin'),
+            'origin' => config('pckg.hook.origin'),
             'task' => $this->id,
             // add signature?
         ];
@@ -142,9 +142,11 @@ class Task extends Record
      */
     public function pushContext(array $newContext)
     {
-        $origin = config('pckg.task.origin');
+        $origin = config('pckg.hook.origin');
         $context = $this->context;
-        $context[] = ['origin' => $origin] + $newContext;
+        $data = ['origin' => $origin] + $newContext;
+        $data['signature'] = sha1(sha1(json_encode($data)) . json_encode($data));
+        $context[] = $data;
         $this->setAndSave([
             'context' => $context,
         ]);

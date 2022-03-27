@@ -21,6 +21,11 @@ abstract class AbstractHookEvent
         return $this->event->getBody();
     }
 
+    protected function getBodyObject()
+    {
+        return (object)$this->getBody();
+    }
+
     public function getRetry(): int
     {
         return $this->event->getRetry();
@@ -35,6 +40,11 @@ abstract class AbstractHookEvent
     {
         return collect($this->getContext())
                 ->first(fn($context) => $context['origin'] === $origin && array_key_exists($prop, $context))[$prop] ?? null;
+    }
+
+    public function getLastContext(string $prop)
+    {
+        return collect($this->getContext())->last()[$prop] ?? null;
     }
 
     public function getMyContext(string $prop)

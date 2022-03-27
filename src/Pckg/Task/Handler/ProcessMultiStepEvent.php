@@ -20,7 +20,7 @@ class ProcessMultiStepEvent
             return;
         }
 
-        $nextTask = collect($procedure)->first(fn($task) => in_array($this->event->getEvent(), $task['when'] ?? []));
+        $nextTask = collect($procedure)->first(fn($task) => in_array($this->event->getEvent() . '@' . $this->event->getLastContext('origin'), $task['when'] ?? []));
         if (!$nextTask) {
             return;
         }
@@ -37,6 +37,14 @@ class ProcessMultiStepEvent
 
         // trigger next task
         // queue('hook-notifications', ['task' => $task->id, 'hook' => $nextTask['hook'], 'body' => $nextTask['body']]);
-        Webhook::notification($task, $nextTask['hook'], $nextTask['body'] ?? []);
+        $hook = $nextTask['hook'];
+        if (!is_array($hook)) {
+            Webhook::notification($task, $hook, $nextTask['body'] ?? []);
+            return;
+        }
+
+        foreach ($hook as $origin => $event) {
+            Webhook::notification($task, $event, $nextTask['body'] ?? [], [$origin]);
+        }
     }
 }

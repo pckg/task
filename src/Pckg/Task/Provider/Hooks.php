@@ -36,8 +36,14 @@ class Hooks extends Provider
             HookEvent::class . '.handling' => [
                 WrapHookEvent::class,
             ],
+            HookEvent::class . '.forwarding' => [
+                WrapHookEvent::class,
+            ],
             HookEvent::class . '.handled' => [
                 ProcessMultiStepEvent::class,
+                UnwrapHookEvent::class,
+            ],
+            HookEvent::class . '.forwarded' => [
                 UnwrapHookEvent::class,
             ],
         ];

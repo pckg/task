@@ -5,6 +5,7 @@ namespace Pckg\Task\Event;
 use Pckg\Concept\Context;
 use Pckg\Task\Form\Hook;
 use Pckg\Task\Record\Task;
+use Pckg\Task\Service\Webhook;
 
 class HookEvent
 {
@@ -33,24 +34,66 @@ class HookEvent
             return;
         }
 
-        $event = $origin['triggers'][$this->event] ?? null;
-        if (!$event) {
-            error_log('Non-registered trigger ' . $this->event . ' for origin ' . $this->origin);
-            return;
+        if (isset($origin['triggers'][$this->event])) {
+            $this->handleTriggers($origin['triggers'][$this->event]);
         }
 
-        // queue('hook-events', ['event' => $this->toArray()]);
-        // this should be queued?
-        $handler = (new $event($this));
+        if (isset($origin['forwarders'][$this->event])) {
+            $this->handleForwarders($origin['forwarders'][$this->event]);
+        }
 
-        // allow wrapping
-        trigger(HookEvent::class . '.handling', [$handler, $this]);
+        if (!($origin['triggers'] ?? []) && !($origin['forwarders'] ?? [])) {
+            error_log('Non-registered trigger/forwarder ' . $this->event . ' for origin ' . $this->origin);
+        }
+    }
 
-        // handle the event
-        $handler->handle();
+    protected function handleTriggers(string|array $events)
+    {
+        if (!is_array($events)) {
+            $events = [$events];
+        }
 
-        // allow after-events
-        trigger(HookEvent::class . '.handled', [$handler, $this]);
+        foreach ($events as $event) {
+            // queue('hook-events', ['event' => $this->toArray()]);
+            // this should be queued?
+            $handler = (new $event($this));
+
+            // allow wrapping
+            trigger(HookEvent::class . '.handling', [$handler, $this]);
+
+            // handle the event
+            $handler->handle();
+
+            // allow after-events
+            trigger(HookEvent::class . '.handled', [$handler, $this]);
+        }
+    }
+
+    protected function handleForwarders(array $forwards)
+    {
+        if (!is_associative_array($forwards)) {
+            $forwards = [$forwards];
+        }
+
+        foreach ($forwards as $forward) {
+            // allow wrapping
+            trigger(HookEvent::class . '.forwarding', [$handler, $this]);
+
+            // is task in context?
+            Webhook::notification(
+                $this->getTask(),
+                $forward['to'],
+                $forward['body']
+            );
+
+            // allow after-events
+            trigger(HookEvent::class . '.forwarded', [$handler, $this]);
+        }
+    }
+
+    public function getTask(): ?Task
+    {
+        return context()->getOrDefault(Task::class);
     }
 
     public function getOrigin(): string
