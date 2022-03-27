@@ -20,7 +20,7 @@ class ProcessMultiStepEvent
             return;
         }
 
-        $nextTask = collect($procedure)->first(fn($task) => in_array($this->event->getEvent() . '@' . $this->event->getLastContext('origin'), $task['when'] ?? []));
+        $nextTask = collect($procedure)->first(fn($task) => $this->event->getEvent() . '@' . $this->event->getLastContext('origin') === $task['when']);
         if (!$nextTask) {
             return;
         }
