@@ -16,6 +16,11 @@ abstract class AbstractHookEvent
         return $this->event->getEvent();
     }
 
+    public function getHookEvent(): HookEvent
+    {
+        return $this->event;
+    }
+
     public function getBody(): array
     {
         return $this->event->getBody();
