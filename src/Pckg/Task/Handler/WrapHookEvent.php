@@ -13,8 +13,8 @@ class WrapHookEvent
 
     public function __construct(AbstractHookEvent $event, Context $context)
     {
-        $this->event = $this->event;
-        $this->context = $this->context;
+        $this->event = $event;
+        $this->context = $context;
     }
 
     public function handle()
