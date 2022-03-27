@@ -47,7 +47,11 @@ class HookEvent
         }
     }
 
-    protected function handleTriggers(string|array $events)
+    /**
+     * @param $events string|array
+     * @return void
+     */
+    protected function handleTriggers($events)
     {
         if (!is_array($events)) {
             $events = [$events];

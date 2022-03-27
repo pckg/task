@@ -10,7 +10,7 @@ use Pckg\Task\Record\Task;
 
 class Webhook
 {
-    public static function buildPayload(Task $task, string $event, array|callable $body): array
+    public static function buildPayload(Task $task, string $event, $body): array
     {
         $lastParent = $task->lastParent;
         $payload = [
@@ -31,7 +31,7 @@ class Webhook
         return $payload;
     }
 
-    public static function notification(Task $task, string $event, array|callable $payload, array $onlyOrigins = [])
+    public static function notification(Task $task, string $event, $payload, array $onlyOrigins = [])
     {
         $data = static::buildPayload($task, $event, $payload);
         $origins = config('pckg.hook.origins', []);
