@@ -20,7 +20,7 @@ class ProcessMultiStepEvent
             return;
         }
 
-        $nextTask = collect($procedure)->first(fn($task) => $this->event->getEvent() . '@' . $this->event->getLastContext('origin') === $task['when']);
+        $nextTask = collect($procedure)->first(fn($task) => $this->event->getEvent() . '@' . $this->getShortOrigin($this->event->getLastContext('origin')) === $task['when']);
         if (!$nextTask) {
             return;
         }
@@ -46,5 +46,11 @@ class ProcessMultiStepEvent
         foreach ($hook as $origin => $event) {
             Webhook::notification($task, $event, $nextTask['body'] ?? [], [$origin]);
         }
+    }
+
+    protected function getShortOrigin($originKey)
+    {
+        return collect(config('pckg.task.origins'))
+                ->filter(fn($origin, $key) => $key === $originKey || $origin['alias'] === $originKey)->keys()[0] ?? $originKey;
     }
 }
