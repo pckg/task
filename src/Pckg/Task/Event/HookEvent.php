@@ -106,7 +106,7 @@ class HookEvent
                     );
                 } else {
                     Webhook::notification(
-                        $task,
+                        Task::getOrFail($task),
                         $forward['to'],
                         $forward['body']
                     );
