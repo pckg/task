@@ -80,8 +80,8 @@ class HookEvent
         }
 
         foreach ($forwards as $forward) {
-            $genericEvent = new GenericHookEvent($this->event);
-            
+            $genericEvent = new GenericHookEvent($this);
+
             // allow wrapping
             trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
 
