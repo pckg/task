@@ -36,16 +36,17 @@ class HookEvent
         }
 
         // allow wrapping
-        trigger(HookEvent::class . '.handling', [$handler, $this]);
+        $genericEvent = new GenericHookEvent($this);
+        trigger(HookEvent::class . '.handling', [$genericEvent, $this]);
 
         $this->handleTriggers($origin['triggers'][$this->event] ?? []);
 
-        (new ProcessMultiStepEvent(new GenericHookEvent($this)))->handle();
+        (new ProcessMultiStepEvent($genericEvent))->handle();
 
         $this->handleForwarders($origin['forwarders'][$this->event] ?? []);
 
         // allow after-events
-        trigger(HookEvent::class . '.handled', [$handler, $this]);
+        trigger(HookEvent::class . '.handled', [$genericEvent, $this]);
     }
 
     protected function handleTriggers(string|array $events)
