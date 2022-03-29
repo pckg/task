@@ -32,7 +32,7 @@ class ProcessHookEvent
         collect(is_array($events) ? $events : [$events])
             ->try($es, fn($e) => error_log('Error handling trigger ' . exception($e)))
             ->each(function ($event) {
-                $handler = (new $event($this));
+                $handler = (new $event($this->event));
 
                 trigger(HookEvent::class . '.handling', [$handler, new AbstractHookEvent($this->event)]);
 
