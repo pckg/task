@@ -10,17 +10,14 @@ use Pckg\Task\Record\Task;
 
 class Webhook
 {
-    public static function buildPayload(Task $task, string $event, $body): array
+    public static function notification(?Task $task, string $event, $body, array $onlyOrigins = [])
     {
         $lastParent = $task->lastParent;
         $payload = [
-            'origin' => config('pckg.hook.origin'),
-            'event' => explode('@', $event)[0],
             // object?
             'body' => is_only_callable($body) ? $body($task, $event) : $body,
             // array? sign the context?
             'context' => $lastParent->context,
-            'retry' => 0,
             'task' => $lastParent->id,
         ];
 
@@ -28,18 +25,15 @@ class Webhook
             $payload['subtask'] = $task->id;
         }
 
-        return $payload;
+        return static::processNotification($payload, $event, $onlyOrigins);
     }
 
-    public static function notification(Task $task, string $event, $payload, array $onlyOrigins = [])
+    public static function processNotification(array $data, string $event, array $onlyOrigins = [])
     {
-        $data = static::buildPayload($task, $event, $payload);
-
-        return static::processNotification($data, $event, $onlyOrigins);
-    }
-
-    public static function processNotification(array $data, string $event, array $onlyOrigins = []) {
-
+        $data['origin'] = config('pckg.hook.origin');
+        $data['retry'] = 0;
+        $data['event'] = explode('@', $event)[0];
+        
         $origins = config('pckg.hook.origins', []);
         foreach ($origins as $key => $origin) {
             $partialEvent = explode('@', $event)[0];
@@ -57,6 +51,7 @@ class Webhook
                 }
             }
 
+            // this should be queued?
             try {
                 ApiLog::create([
                     'type' => 'external:request:POST',

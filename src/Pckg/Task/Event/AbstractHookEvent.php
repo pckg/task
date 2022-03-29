@@ -2,7 +2,10 @@
 
 namespace Pckg\Task\Event;
 
-abstract class AbstractHookEvent
+use Pckg\Task\Record\Task;
+use Pckg\Task\Service\Webhook;
+
+class AbstractHookEvent
 {
     protected HookEvent $event;
 
@@ -55,5 +58,43 @@ abstract class AbstractHookEvent
     public function getMyContext(string $prop)
     {
         return $this->getOriginContext(config('pckg.hook.origin'), $prop);
+    }
+
+    public function getMyTask()
+    {
+        $task = $this->getMyContext('task');
+
+        if (!$task) {
+            return null;
+        }
+
+        return Task::gets($task);
+    }
+
+    public function when($condition, callable $callable)
+    {
+        if ($condition) {
+            return $callable($condition);
+        }
+
+        return $condition;
+    }
+
+    public function hook(string $event, array $body, ?Task $task = null)
+    {
+        if (!$task) {
+            $task = $this->getMyTask();
+        }
+
+        if ($task) {
+            Webhook::notification($task, $event, $body);
+            return;
+        }
+
+        Webhook::processNotification([
+            'body' => $body,
+            'context' => $this->event->getContext(),
+            'task' => null,
+        ]);
     }
 }

@@ -1,14 +1,21 @@
 <?php namespace Pckg\Task\Record;
 
+use CommsCenter\Supervisor\Event\Center\PlatformChannelUpdated;
+use Pckg\Collection;
 use Pckg\Database\Entity;
 use Pckg\Database\Field\JsonArray;
 use Pckg\Database\Field\JsonObject;
 use Pckg\Database\Record;
 use Pckg\Task\Entity\Tasks;
+use Pckg\Task\Event\AbstractHookEvent;
+use Pckg\Task\Event\HookEvent;
 use Pckg\Task\Form\Hook;
 use Pckg\Task\Service\Webhook;
 use Throwable;
 
+/**
+ * @property JsonArray $procedure
+ */
 class Task extends Record
 {
 
@@ -27,6 +34,7 @@ class Task extends Record
     protected $encapsulate = [
         'props' => JsonObject::class,
         'context' => JsonArray::class,
+        'procedure' => JsonArray::class,
     ];
 
     protected static function getRequestContext()
@@ -64,12 +72,29 @@ class Task extends Record
         ]);
     }
 
+    /**
+     * @param string $name
+     * @return Task|mixed
+     * @throws \Exception
+     */
     public static function named(string $name): Task
     {
         return static::create([
             'title' => $name,
             'context' => [],
         ]);
+    }
+
+    public static function procedure(string $name, array $context, array $procedure)
+    {
+        $task = static::named($event)
+            ->async('10minutes')
+            ->pushContext($context)
+            ->setAndSave([
+                'procedure' => $procedure
+            ]);
+
+        return $task;
     }
 
     /**
@@ -154,6 +179,28 @@ class Task extends Record
         return $this;
     }
 
+    public function pushProcedures(array $procedures)
+    {
+        foreach ($procedures as $procedure) {
+            $this->procedure[] = $procedure;
+        }
+        $this->save();
+
+        return $this;
+    }
+
+    public function pushProcedure(array $procedure)
+    {
+        return $this->pushProcedures([$procedure]);
+    }
+
+    public function runProcedure()
+    {
+        $task->make(fn(Task $task) => $task->notification($this->procedure[0]['hook'], $this->procedure[0]['body'] ?? []));
+
+        return $task;
+    }
+
     /**
      * @param callable $make
      *
@@ -184,6 +231,15 @@ class Task extends Record
         $this->make = $make;
 
         return $this;
+    }
+
+    public function toResponse()
+    {
+        return [
+            'success' => $this->status !== 'error',
+            'async' => $this->status === 'async',
+            'task' => $this->id,
+        ];
     }
 
     public function execute(callable $exception = null)
@@ -289,5 +345,48 @@ class Task extends Record
     public function getResult()
     {
         return $this->result;
+    }
+
+    public function notification(string $event, array $body)
+    {
+        return Webhook::notification($this, $event, $body);
+    }
+
+    public function processProcedure(HookEvent $event, $nextTask)
+    {
+        if (isset($nextTask['complete'])) {
+            return;
+        }
+
+        if (isset($nextTask['event'])) {
+            error_log('Running event ' . $nextTask['command']);
+            (new $nextTask['event']($event))->handle();
+            return;
+        }
+
+        if (!isset($nextTask['hook'])) {
+            error_log('Nothing to execute' . json_encode($nextTask));
+            return;
+        }
+
+        // trigger next task
+        // queue('hook-notifications', ['task' => $task->id, 'hook' => $nextTask['hook'], 'body' => $nextTask['body']]);
+        $hook = $nextTask['hook'];
+        if (is_string($hook)) {
+            Webhook::notification($this, $hook, $nextTask['body'] ?? []);
+            return;
+        }
+
+        foreach ($hook as $origin => $ev) {
+            Webhook::notification($this, $ev, $nextTask['body'] ?? [], [$origin]);
+        }
+    }
+
+    public function getNextTasks(HookEvent $event): Collection
+    {
+        $fullEvent = $event->getFullEventName();
+
+        return collect($this->procedure->toArray())
+            ->filter(fn($subtask) => $fullEvent === $subtask['when']);
     }
 }
