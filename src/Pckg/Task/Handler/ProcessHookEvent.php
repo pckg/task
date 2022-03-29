@@ -8,9 +8,11 @@ use Pckg\Task\Service\Webhook;
 
 class ProcessHookEvent
 {
-    public function __construct(protected HookEvent $event)
-    {
+    protected HookEvent $event;
 
+    public function __construct(HookEvent $event)
+    {
+        $this->event = $event;
     }
 
     public function handle()
