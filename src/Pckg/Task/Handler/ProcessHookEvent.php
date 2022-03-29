@@ -29,7 +29,7 @@ class ProcessHookEvent
         $this->handleProcedures();
     }
 
-    protected function handleTriggers(string|array $events)
+    protected function handleTriggers($events)
     {
         collect(is_array($events) ? $events : [$events])
             ->try($es, fn($e) => error_log('Error handling trigger ' . exception($e)))
