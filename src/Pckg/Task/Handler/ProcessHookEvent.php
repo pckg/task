@@ -88,6 +88,6 @@ class ProcessHookEvent
     public function getEventOriginConfig()
     {
         return collect(config('pckg.hook.origins', []))
-            ->first(fn($origin, $key) => $origin['alias'] === $this->origin);
+            ->first(fn($origin, $key) => $origin['alias'] === $this->event->getOrigin());
     }
 }
