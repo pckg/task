@@ -72,7 +72,7 @@ class ProcessHookEvent
             return;
         }
 
-        $nextTasks = $task->getNextTasks($this);
+        $nextTasks = $task->getNextTasks($this->event);
 
         if (!$nextTasks->count()) {
             error_log('No next task ' . json_encode($this->event->toArray()));
