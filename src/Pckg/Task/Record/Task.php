@@ -198,7 +198,7 @@ class Task extends Record
     {
         $this->make(fn(Task $task) => $task->notification($this->procedure[0]['hook'], $this->procedure[0]['body'] ?? []));
 
-        return $task;
+        return $this;
     }
 
     /**
