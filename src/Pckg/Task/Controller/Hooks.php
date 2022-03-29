@@ -3,6 +3,7 @@
 namespace Pckg\Task\Controller;
 
 use Pckg\Task\Form\Hook;
+use Pckg\Task\Handler\ProcessHookEvent;
 
 class Hooks
 {
@@ -12,11 +13,13 @@ class Hooks
      */
     public function postIndexAction(Hook $hook)
     {
+        $hookEvent = $hook->toHookEvent();
+
         response()->respondAndContinue([
             'success' => true,
             'async' => true,
         ]);
 
-        $hook->toHookEvent()->handle();
+        (new ProcessHookEvent($hookEvent))->handle();
     }
 }

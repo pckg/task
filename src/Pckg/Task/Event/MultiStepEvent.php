@@ -7,7 +7,7 @@ use Pckg\Task\Service\AsyncTask;
 use Pckg\Task\Service\Procedure;
 use Pckg\Task\Service\Webhook;
 
-abstract class MultiStepEvent implements Procedure
+abstract class MultiStepEvent extends AbstractHookEvent implements Procedure
 {
     use AsyncTask;
 
@@ -29,9 +29,13 @@ abstract class MultiStepEvent implements Procedure
         $procedure = $this->getProcedure();
 
         // save procedure
-        $task->pushContext([
+        $task->setAndSave([
             'procedure' => $procedure,
         ]);
+
+        if (!isset($procedure[0]['hook'])) {
+            return;
+        }
 
         // start with first command
         Webhook::notification($task, $procedure[0]['hook'], $procedure[0]['body'] ?? []);

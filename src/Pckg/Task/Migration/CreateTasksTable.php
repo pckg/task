@@ -17,6 +17,7 @@ class CreateTasksTable extends Migration
         $tasks->datetime('timeouts_at');
         $tasks->longtext('data');
         $tasks->json('context');
+        $tasks->json('procedure');
 
         $this->save();
     }

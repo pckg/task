@@ -4,7 +4,6 @@ namespace Pckg\Task\Event;
 
 use Pckg\Concept\Context;
 use Pckg\Task\Form\Hook;
-use Pckg\Task\Handler\ProcessMultiStepEvent;
 use Pckg\Task\Record\Task;
 use Pckg\Task\Service\Webhook;
 
@@ -23,101 +22,6 @@ class HookEvent
         $this->body = $body;
         $this->context = $context;
         $this->retry = $retry;
-    }
-
-    public function handle()
-    {
-        $origin = collect(config('pckg.hook.origins', []))
-            ->first(fn($origin, $key) => $origin['alias'] === $this->origin);
-
-        if (!$origin) {
-            error_log('Non-registered origin ' . $this->origin);
-            return;
-        }
-
-        // allow wrapping
-        $genericEvent = new GenericHookEvent($this);
-        trigger(HookEvent::class . '.handling', [$genericEvent, $this]);
-
-        $this->handleTriggers($origin['triggers'][$this->event] ?? []);
-
-        (new ProcessMultiStepEvent($genericEvent))->handle();
-
-        $this->handleForwarders($origin['forwarders'][$this->event] ?? []);
-
-        // allow after-events
-        trigger(HookEvent::class . '.handled', [$genericEvent, $this]);
-    }
-
-    protected function handleTriggers(string|array $events)
-    {
-        if (!$events) {
-            return;
-        }
-
-        if (!is_array($events)) {
-            $events = [$events];
-        }
-
-        foreach ($events as $event) {
-            // queue('hook-events', ['event' => $this->toArray()]);
-            // this should be queued?
-            $handler = (new $event($this));
-
-            // handle the event
-            $handler->handle();
-        }
-    }
-
-    protected function handleForwarders(array $forwards)
-    {
-        if (!$forwards) {
-            return;
-        }
-
-        if (!is_associative_array($forwards)) {
-            $forwards = [$forwards];
-        }
-
-        foreach ($forwards as $forward) {
-
-            $genericEvent = new GenericHookEvent($this);
-            $task = $genericEvent->getMyContext('task');
-
-            // allow wrapping
-            trigger(HookEvent::class . '.forwarding', [$genericEvent, $this]);
-
-            try {
-                // is task in context?
-
-                if (!$task) {
-                    // we need to provide task so the context is known?
-                    error_log("No task to forward? " . json_encode($this->toArray()));
-
-                    Webhook::processNotification([
-                        'origin' => config('pckg.hook.origin'),
-                        'event' => explode('@', $forward['to'])[0],
-                        'body' => is_only_callable($forward['body']) ? $forward['body']() : $forward['body'],
-                        'context' => $this->context,
-                        'retry' => 0,
-                        'task' => null,
-                    ],
-                        $forward['to']
-                    );
-                } else {
-                    Webhook::notification(
-                        Task::getOrFail($task),
-                        $forward['to'],
-                        $forward['body']
-                    );
-                }
-            } catch (\Throwable $e) {
-                error_log("Error forwarding task:" . exception($e));
-            }
-
-            // allow after-events
-            trigger(HookEvent::class . '.forwarded', [$genericEvent, $this]);
-        }
     }
 
     public function getTask(): ?Task
@@ -148,6 +52,19 @@ class HookEvent
     public function getRetry(): int
     {
         return $this->retry;
+    }
+
+    public function getShortOrigin()
+    {
+        $originKey = $this->getOrigin();
+
+        return collect(config('pckg.hook.origins'))
+                ->filter(fn($origin, $key) => $key === $originKey || $origin['alias'] === $originKey)->keys()[0] ?? $originKey;
+    }
+
+    public function getFullEventName()
+    {
+        return $this->event . '@' . $this->getShortOrigin();
     }
 
     public function toArray(): array

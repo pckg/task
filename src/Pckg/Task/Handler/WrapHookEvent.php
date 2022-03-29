@@ -14,7 +14,7 @@ class WrapHookEvent
 
     public function handle()
     {
-        $taskId = $this->event->getMyContext('task')['id'] ?? null;
+        $taskId = $this->event->getMyContext('task') ?? null;
 
         if (!$taskId) {
             return;

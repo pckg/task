@@ -6,7 +6,7 @@ use Pckg\Task\Controller\Hooks as HooksController;
 use Pckg\Task\Event\HookEvent;
 use Pckg\Task\Form\Hook;
 use Pckg\Task\Handler\ProcessHook;
-use Pckg\Task\Handler\ProcessMultiStepEvent;
+use Pckg\Task\Handler\ProcessHookEvent;
 use Pckg\Task\Handler\UnwrapHookEvent;
 use Pckg\Task\Handler\WrapHookEvent;
 use Pckg\Task\Middleware\DisallowInvalidHosts;
@@ -36,13 +36,7 @@ class Hooks extends Provider
             HookEvent::class . '.handling' => [
                 WrapHookEvent::class,
             ],
-            HookEvent::class . '.forwarding' => [
-                WrapHookEvent::class,
-            ],
             HookEvent::class . '.handled' => [
-                UnwrapHookEvent::class,
-            ],
-            HookEvent::class . '.forwarded' => [
                 UnwrapHookEvent::class,
             ],
         ];
