@@ -95,6 +95,6 @@ class AbstractHookEvent
             'body' => $body,
             'context' => $this->event->getContext(),
             'task' => null,
-        ]);
+        ], $event);
     }
 }
