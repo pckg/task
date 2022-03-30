@@ -6,6 +6,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Pckg\Api\Record\ApiLog;
+use Pckg\Task\Event\HookEvent;
+use Pckg\Task\Handler\ProcessHookEvent;
 use Pckg\Task\Record\Task;
 
 class Webhook
@@ -49,6 +51,17 @@ class Webhook
                 if (!$events || !in_array('*', $events) && !in_array($event, $events)) {
                     continue;
                 }
+            }
+
+            // allow self referencing
+            if (isset($origin['local'])) {
+                try {
+                    $hookEvent = new HookEvent($origin['alias'], $data['event'], $data['body'] ?? [], $data['context'] ?? []);
+                    (new ProcessHookEvent($hookEvent))->handle();
+                } catch (Throwable $e) {
+                    error_log('Error processing local event ' . exception($e));
+                }
+                continue;
             }
 
             // this should be queued?
