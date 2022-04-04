@@ -71,10 +71,12 @@ class AbstractHookEvent
         return Task::gets($task);
     }
 
-    public function when($condition, callable $callable)
+    public function when($condition, callable $callable, ?callable $else = null)
     {
         if ($condition) {
             return $callable($condition);
+        } elseif ($else) {
+            return $else($condition);
         }
 
         return $condition;

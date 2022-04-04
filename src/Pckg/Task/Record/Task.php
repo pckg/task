@@ -77,11 +77,11 @@ class Task extends Record
      * @return Task|mixed
      * @throws \Exception
      */
-    public static function named(string $name): Task
+    public static function named(string $name, array $context = []): Task
     {
         return static::create([
             'title' => $name,
-            'context' => [],
+            'context' => $context,
         ]);
     }
 
