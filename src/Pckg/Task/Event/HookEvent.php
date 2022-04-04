@@ -77,4 +77,15 @@ class HookEvent
             'retry' => $this->retry,
         ];
     }
+
+    public function toTask(string $name, array $context = []): Task
+    {
+        $task = Task::named($name, $this->context);
+
+        if ($context) {
+            $task->pushContext($context);
+        }
+
+        return $task;
+    }
 }
