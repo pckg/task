@@ -10,7 +10,6 @@ class ProcessHookEvent
 {
     public function __construct(protected HookEvent $event)
     {
-
     }
 
     public function handle()
@@ -29,6 +28,7 @@ class ProcessHookEvent
 
     protected function handleTriggers(string|array $events)
     {
+        $es = [];
         collect(is_array($events) ? $events : [$events])
             ->try($es, fn($e) => error_log('Error handling trigger ' . exception($e)))
             ->each(function ($event) {
@@ -49,6 +49,7 @@ class ProcessHookEvent
 
     protected function handleForwarders($forwards)
     {
+        $es = [];
         collect(is_array($forwards) ? $forwards : [$forwards])
             ->try($es, fn($e) => error_log("Error forwarding task:" . exception($e)))
             ->each(fn($to) => Webhook::processNotification([
@@ -79,6 +80,7 @@ class ProcessHookEvent
             return;
         }
 
+        $es = [];
         $nextTasks->try($es, fn($e) => error_log(exception($e)))
             ->each(fn($nextTask) => $task->processProcedure($this->event, $nextTask));
     }

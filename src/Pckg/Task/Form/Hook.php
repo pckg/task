@@ -7,7 +7,6 @@ use Pckg\Task\Event\HookEvent;
 
 class Hook extends Form implements Form\ResolvesOnRequest
 {
-
     public function initFields()
     {
         $this->addText('origin')->required();

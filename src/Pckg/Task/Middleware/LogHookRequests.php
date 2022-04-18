@@ -6,7 +6,6 @@ use Pckg\Framework\Request;
 
 class LogHookRequests
 {
-
     public Request $request;
 
     public function __construct(Request $request)
@@ -16,8 +15,7 @@ class LogHookRequests
 
     public function execute(callable $next)
     {
-        
+
         return $next();
     }
-
 }

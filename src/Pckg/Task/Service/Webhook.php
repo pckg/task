@@ -3,12 +3,12 @@
 namespace Pckg\Task\Service;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Pckg\Api\Record\ApiLog;
 use Pckg\Task\Event\HookEvent;
 use Pckg\Task\Handler\ProcessHookEvent;
 use Pckg\Task\Record\Task;
+use Throwable;
 
 class Webhook
 {
@@ -35,7 +35,7 @@ class Webhook
         $data['origin'] = config('pckg.hook.origin');
         $data['retry'] = 0;
         $data['event'] = explode('@', $event)[0];
-        
+
         $origins = config('pckg.hook.origins', []);
         foreach ($origins as $key => $origin) {
             $partialEvent = explode('@', $event)[0];
@@ -81,7 +81,7 @@ class Webhook
                         RequestOptions::JSON => $data,
                         RequestOptions::TIMEOUT => 5,
                     ]);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     trigger(Webhook::class . '.notificationException', [
                         'url' => $origin['url'],
                         'payload' => $data,
@@ -95,7 +95,7 @@ class Webhook
                         'url' => $origin['url'],
                     ]);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 error_log(exception($e));
             }
         }

@@ -7,7 +7,6 @@ use Pckg\Framework\Request;
 
 class DisallowInvalidHosts
 {
-
     public Request $request;
 
     public Config $config;
@@ -30,5 +29,4 @@ class DisallowInvalidHosts
 
         throw new \Exception('Invalid hook origin ' . $ip);
     }
-
 }

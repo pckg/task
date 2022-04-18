@@ -11,11 +11,16 @@
   ],
   "require": {
     "pckg/concept": "dev-master",
-    "pckg/database": "dev-master",
     "ext-json": "*"
   },
   "require-dev": {
-    "pckg-app/frontend-dev": "dev-master"
+    "pckg-app/frontend-dev": "dev-next-8.0 as dev-master",
+    "pckg/database": "dev-next-8.0 as dev-master",
+    "pckg/collection": "dev-next-8.0 as dev-master",
+    "pckg/htmlbuilder": "dev-next-8.0 as dev-master",
+    "pckg/framework": "dev-next-8.0 as dev-master",
+    "pckg/migrator": "dev-next-8.0 as dev-master",
+    "pckg-app/api": "dev-next-8.0 as dev-master"
   },
   "autoload": {
     "psr-0": {
@@ -26,7 +31,7 @@
     "test": [
       "true || vendor/bin/phpunit --help --stop-on-defect",
       "true || vendor/bin/phpcloc cloc src/",
-      "vendor/bin/phpstan analyse src/ --level=1",
+      "vendor/bin/phpstan analyse src/ --level=5",
       "vendor/bin/phpcs --extensions=php --warning-severity=8 --error-severity=1 --standard=PSR12 --parallel=2 -p src/",
       "vendor/bin/codecept run"
     ],

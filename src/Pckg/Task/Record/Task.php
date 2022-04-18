@@ -1,13 +1,13 @@
-<?php namespace Pckg\Task\Record;
+<?php
 
-use CommsCenter\Supervisor\Event\Center\PlatformChannelUpdated;
+namespace Pckg\Task\Record;
+
 use Pckg\Collection;
 use Pckg\Database\Entity;
 use Pckg\Database\Field\JsonArray;
 use Pckg\Database\Field\JsonObject;
 use Pckg\Database\Record;
 use Pckg\Task\Entity\Tasks;
-use Pckg\Task\Event\AbstractHookEvent;
 use Pckg\Task\Event\HookEvent;
 use Pckg\Task\Form\Hook;
 use Pckg\Task\Service\Webhook;
@@ -15,14 +15,19 @@ use Throwable;
 
 /**
  * @property JsonArray $procedure
+ * @property JsonArray $context
+ * @property string $status
+ * @property string $timeouts_at
+ * @property ?Task $parent
+ * @property Task $lastParent
+ * @property int $parent_id
  */
 class Task extends Record
 {
-
     protected $entity = Tasks::class;
 
     /**
-     * @var callable
+     * @var ?callable
      */
     protected $make;
 
@@ -74,7 +79,6 @@ class Task extends Record
 
     /**
      * @param string $name
-     * @return Task|mixed
      * @throws \Exception
      */
     public static function named(string $name, array $context = []): Task
@@ -87,7 +91,7 @@ class Task extends Record
 
     public static function procedure(string $name, array $context, array $procedure)
     {
-        $task = static::named($event)
+        $task = static::named($name)
             ->async('10minutes')
             ->pushContext($context)
             ->setAndSave([
@@ -98,7 +102,7 @@ class Task extends Record
     }
 
     /**
-     * @param $data
+     * @param null|array|string $data
      * @param Entity|null $entity
      * @return Task
      * @throws \Exception
@@ -258,7 +262,7 @@ class Task extends Record
             ]);
             $this->result = $make($this);
             if (!$this->timeouts_at) {
-                $this->set(['status' => $this->timeouts_at ? 'async' : 'ended']);
+                $this->set(['status' => 'ended']);
             } else {
                 $this->end();
             }

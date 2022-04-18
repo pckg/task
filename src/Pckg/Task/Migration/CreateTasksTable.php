@@ -20,5 +20,7 @@ class CreateTasksTable extends Migration
         $tasks->json('procedure');
 
         $this->save();
+
+        return $this;
     }
 }
