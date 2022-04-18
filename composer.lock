@@ -2278,12 +2278,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/pckg/framework.git",
-                "reference": "c02fd50b04b64e6e9b3dcb202e631f308e64793b"
+                "reference": "14126ca6a4a0a01221a35c0049cd3764f7709723"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pckg/framework/zipball/c02fd50b04b64e6e9b3dcb202e631f308e64793b",
-                "reference": "c02fd50b04b64e6e9b3dcb202e631f308e64793b",
+                "url": "https://api.github.com/repos/pckg/framework/zipball/14126ca6a4a0a01221a35c0049cd3764f7709723",
+                "reference": "14126ca6a4a0a01221a35c0049cd3764f7709723",
                 "shasum": ""
             },
             "require": {
@@ -2344,7 +2344,7 @@
                 "issues": "https://github.com/pckg/framework/issues",
                 "source": "https://github.com/pckg/framework/tree/next-8.0"
             },
-            "time": "2022-04-18T07:03:34+00:00"
+            "time": "2022-04-18T11:59:59+00:00"
         },
         {
             "name": "pckg/htmlbuilder",
@@ -2352,12 +2352,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/pckg/htmlbuilder.git",
-                "reference": "f52cc6b75301bf640eece063bb301af706755da0"
+                "reference": "fe6ac15fd98aa2155804c3c223664cd042b69131"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pckg/htmlbuilder/zipball/f52cc6b75301bf640eece063bb301af706755da0",
-                "reference": "f52cc6b75301bf640eece063bb301af706755da0",
+                "url": "https://api.github.com/repos/pckg/htmlbuilder/zipball/fe6ac15fd98aa2155804c3c223664cd042b69131",
+                "reference": "fe6ac15fd98aa2155804c3c223664cd042b69131",
                 "shasum": ""
             },
             "require": {
@@ -2368,6 +2368,7 @@
                 "pckg-app/frontend-dev": "dev-master",
                 "pckg/framework": "dev-master || dev-master-yoda"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-0": {
@@ -2395,7 +2396,7 @@
                 "issues": "https://github.com/pckg/htmlbuilder/issues",
                 "source": "https://github.com/pckg/htmlbuilder/tree/next-8.0"
             },
-            "time": "2022-04-18T09:41:22+00:00"
+            "time": "2022-04-18T11:56:07+00:00"
         },
         {
             "name": "pckg/locale",
